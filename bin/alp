@@ -1,0 +1,146 @@
+#!/usr/bin/env ruby
+
+require 'ncursesw'
+require 'maildir'
+require 'date'
+
+def date(mail)
+  result = mail.select {|line| line[/^Date: /]}[0]
+  Date.parse(result[6..-1].strip)
+end
+
+def from(mail)
+  from = mail.select {|line| line[/^From: /]}[0]
+  from = from[6..-1].strip
+  name = from.match("(.+) <(.+?)@(.+)>")
+  name && name[1] || from
+end
+
+def subject(mail)
+  result = mail.select {|line| line[/^Subject: /]}[0]
+  result[9..-1].strip
+end
+
+def init
+  Ncurses.cbreak
+  Ncurses.noecho
+  Ncurses.nonl
+  Ncurses.stdscr.intrflush(false)
+  Ncurses.stdscr.keypad(true)
+  Ncurses.use_default_colors
+  Ncurses.start_color
+end
+
+def deinit
+  Ncurses.echo
+  Ncurses.nocbreak
+  Ncurses.nl
+  Ncurses.endwin
+end
+
+begin
+  Ncurses.initscr
+
+  init
+
+  maxx = Ncurses.getmaxx(Ncurses.stdscr)
+
+  maxy = Ncurses.getmaxy(Ncurses.stdscr)
+
+  home = ENV['HOME']
+
+  folder = "INBOX"
+
+  maildir = Maildir.new("#{home}/Mail/#{folder}", false)
+
+  mails = maildir.list(:new) + maildir.list(:cur)
+
+  mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key)}
+
+  position = 0
+  start    = 2
+  width    = maxx
+  height   = maxy - start - 1
+  offset   = 0
+  running  = true
+
+  while (running)
+    Ncurses.erase
+
+    Ncurses.attroff(Ncurses::A_BOLD)
+    Ncurses.attron(Ncurses::A_REVERSE)
+    Ncurses.stdscr.move(0, 0)
+    Ncurses.stdscr.addstr " " * width
+    Ncurses.stdscr.move(0, 0)
+    Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder}"
+    message_text = "Message #{offset} of #{mails.length}  "
+    Ncurses.stdscr.move(0, width - message_text.length)
+    Ncurses.stdscr.addstr message_text
+    Ncurses.attroff(Ncurses::A_REVERSE)
+
+    (0..height).each do |index|
+      mail    = mails[offset + index]
+      lines   = mail.data.lines
+      date    = date(lines)
+      from    = from(lines)[0, 25]
+      subject = subject(lines)[0, width - 40]
+      if position == index
+        Ncurses.attron(Ncurses::A_REVERSE)
+      else
+        Ncurses.attroff(Ncurses::A_REVERSE)
+      end
+      if mail.flags.include? "S"
+        Ncurses.attroff(Ncurses::A_BOLD)
+        flags = " "
+      else
+        Ncurses.attron(Ncurses::A_BOLD)
+        flags = "N"
+      end
+      if mail.flags.include? "R"
+        flags = "A"
+      end
+      Ncurses.stdscr.move(start + index, 0)
+      Ncurses.stdscr.addstr " " * width
+      Ncurses.stdscr.move(start + index, 0)
+      Ncurses.stdscr.addstr sprintf(" %s  %s  %-25s %s", flags, date.strftime("%b %e"), from, subject)
+    end
+    ch = Ncurses.stdscr.getch
+    case ch
+    when 'q'.ord
+      running = false
+    when Ncurses::KEY_HOME
+      position = 0
+      offset   = 0
+    when Ncurses::KEY_END
+      position = height
+      offset   = mails.length - height - 1
+    when Ncurses::KEY_UP
+      if (position > 0)
+        position -= 1
+      else
+        offset -= 1
+      end
+    when Ncurses::KEY_DOWN
+      if (position < height)
+        position += 1
+      else
+        offset += 1
+      end
+    when Ncurses::KEY_PPAGE
+      offset -= height
+    when Ncurses::KEY_NPAGE
+      offset += height
+    when 13
+      mail = mails[offset + position]
+      mail.process
+      mail.add_flag("S")
+      deinit
+      system "less #{mail.path}"
+      init
+    end
+    offset = 0 if offset < 0
+    offset = mails.length - height if offset > mails.length - height - 1
+  end
+ensure
+  deinit
+end

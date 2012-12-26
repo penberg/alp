@@ -1,0 +1,12 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    maildir (2.1.0)
+    ncursesw (1.2.4.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  maildir
+  ncursesw

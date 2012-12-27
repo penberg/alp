@@ -230,6 +230,9 @@ begin
       deinit
       system "less #{mail.path}"
       init
+    when 'u'.ord
+      mail = mails[view.index]
+      mail.remove_flag("S")
     end
   end
 ensure

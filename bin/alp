@@ -33,13 +33,17 @@ class Folder
 end
 
 class View
-  attr_reader :position, :offset
+  attr_reader :position, :offset, :size
 
   def initialize width, height, size
     @width  = width
     @height = height
     @size   = size
     @position, @offset = 0, 0
+  end
+
+  def index
+    @offset + @position
   end
 
   def up!
@@ -163,7 +167,7 @@ begin
     Ncurses.stdscr.addstr " " * width
     Ncurses.stdscr.move(0, 0)
     Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder.name}"
-    message_text = "Message #{view.offset + view.position + 1} of #{mails.length}  "
+    message_text = "Message #{view.index + 1} of #{view.size}  "
     Ncurses.stdscr.move(0, width - message_text.length)
     Ncurses.stdscr.addstr message_text
     Ncurses.attroff(Ncurses::A_REVERSE)
@@ -214,13 +218,13 @@ begin
     when Ncurses::KEY_NPAGE
       view.page_down!
     when 'e'.ord
-      mail    = mails[view.offset + view.position]
+      mail    = mails[view.index]
       lines   = mail.data.lines
       subject = subject(lines)
       target  = sanitize_filename(subject)
       system "cp #{mail.path} #{target}"
     when 13
-      mail = mails[view.offset + view.position]
+      mail = mails[view.index]
       mail.process
       mail.add_flag("S")
       deinit

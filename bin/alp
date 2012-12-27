@@ -220,6 +220,7 @@ begin
     when 'n'.ord
       include_seen = !include_seen
       mails = folder.messages include_seen
+      view = View.new width = maxx, height = maxy - start - 1, size = mails.length
     when Ncurses::KEY_HOME
       view.home!
     when Ncurses::KEY_END

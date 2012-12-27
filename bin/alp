@@ -97,7 +97,7 @@ def from(mail)
   from = from[6..-1].strip
   name = from.match("(.+) <(.+?)@(.+)>")
   result = name && name[1] || from
-  Mail::Encodings::value_decode(result).tr_s("\"", "")
+  Mail::Encodings::value_decode(result).tr_s("\"", "").strip
 end
 
 def subject(mail)
@@ -110,12 +110,12 @@ class Time
     if year != from.year
       strftime("%d/%m/%Y")
     elsif month != from.month
-      strftime("%e %b    ")
+      strftime("%e %b")
     else
       if day == from.day
-        strftime("%H:%M     ")
+        strftime("%H:%M")
       else
-        strftime("%e %b    ")
+        strftime("%e %b")
       end
     end
   end
@@ -158,6 +158,16 @@ begin
   height   = maxy - start - 1
   running  = true
 
+  flags_width   = 1
+  from_width    = width / 5
+  date_width    = 10
+  subject_width = width - 1 - flags_width - 2 - from_width - 2 - 2 - date_width - 1
+
+  flags_offset   = 1
+  from_offset    = flags_offset + flags_width + 2
+  subject_offset = from_offset + from_width + 2
+  date_offset    = subject_offset + subject_width + 2
+
   view = View.new width = maxx, height = maxy - start - 1, size = mails.length
 
   while (running)
@@ -178,8 +188,8 @@ begin
       mail    = mails[view.offset + index]
       lines   = mail.data.lines
       date    = date(lines)
-      from    = from(lines)[0, 25]
-      subject = subject(lines)[0, width - 40]
+      from    = from(lines)[0, from_width]
+      subject = subject(lines)[0, subject_width]
       if view.position == index
         Ncurses.attron(Ncurses::A_REVERSE)
       else
@@ -197,8 +207,10 @@ begin
       end
       Ncurses.stdscr.move(start + index, 0)
       Ncurses.stdscr.addstr " " * width
-      Ncurses.stdscr.move(start + index, 0)
-      Ncurses.stdscr.addstr sprintf(" %s  %s  %-25s %s", flags, date.to_human_s, from, subject)
+      Ncurses.stdscr.move(start + index, flags_offset)   ; Ncurses.stdscr.addstr flags
+      Ncurses.stdscr.move(start + index, from_offset)    ; Ncurses.stdscr.addstr from
+      Ncurses.stdscr.move(start + index, subject_offset) ; Ncurses.stdscr.addstr subject
+      Ncurses.stdscr.move(start + index, date_offset)    ; Ncurses.stdscr.addstr sprintf("%*s", date_width, date.to_human_s)
     end
     ch = Ncurses.stdscr.getch
     case ch

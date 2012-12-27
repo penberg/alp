@@ -178,7 +178,7 @@ begin
     Ncurses.stdscr.move(0, 0)
     Ncurses.stdscr.addstr " " * width
     Ncurses.stdscr.move(0, 0)
-    Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder.name}"
+    Ncurses.stdscr.addstr "  #{folder.name}"
     message_text = "Message #{view.index + 1} of #{view.size}  "
     Ncurses.stdscr.move(0, width - message_text.length)
     Ncurses.stdscr.addstr message_text

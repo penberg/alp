@@ -91,7 +91,7 @@ begin
     Ncurses.stdscr.addstr " " * width
     Ncurses.stdscr.move(0, 0)
     Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder.name}"
-    message_text = "Message #{offset} of #{mails.length}  "
+    message_text = "Message #{offset + position + 1} of #{mails.length}  "
     Ncurses.stdscr.move(0, width - message_text.length)
     Ncurses.stdscr.addstr message_text
     Ncurses.attroff(Ncurses::A_REVERSE)

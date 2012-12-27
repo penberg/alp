@@ -2,6 +2,7 @@
 
 require 'ncursesw'
 require 'maildir'
+require 'mail'
 require 'time'
 
 class Folder
@@ -95,12 +96,13 @@ def from(mail)
   from = mail.select {|line| line[/^From: /]}[0]
   from = from[6..-1].strip
   name = from.match("(.+) <(.+?)@(.+)>")
-  name && name[1] || from
+  result = name && name[1] || from
+  Mail::Encodings::value_decode(result)
 end
 
 def subject(mail)
   result = mail.select {|line| line[/^Subject: /]}[0]
-  result[9..-1].strip
+  Mail::Encodings::value_decode(result[9..-1].strip)
 end
 
 class Time

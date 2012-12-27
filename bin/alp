@@ -97,7 +97,7 @@ def from(mail)
   from = from[6..-1].strip
   name = from.match("(.+) <(.+?)@(.+)>")
   result = name && name[1] || from
-  Mail::Encodings::value_decode(result)
+  Mail::Encodings::value_decode(result).tr_s("\"", "")
 end
 
 def subject(mail)

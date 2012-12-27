@@ -54,3 +54,8 @@ And finally, to launch the email client:
 ~~~ sh
 $ ./bin/alp
 ~~~
+
+Screenshots
+-----------
+
+![alt text](https://github.com/penberg/alp/raw/master/www/alp-inbox-screenshot.png "Inbox")

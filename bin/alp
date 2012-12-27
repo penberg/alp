@@ -11,12 +11,20 @@ class Folder
     @name = name
   end
  
-  def messages
+  def messages include_seen
     home = ENV['HOME']
 
     maildir = Maildir.new("#{home}/Mail/#{@name}", false)
 
     mails = maildir.list(:new) + maildir.list(:cur)
+
+    mails.select! {|a|
+      if a.flags.include? "S"
+        include_seen
+      else
+        true
+      end
+    }
 
     mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key) }
 
@@ -73,7 +81,9 @@ begin
 
   folder = Folder.new "INBOX"
 
-  mails = folder.messages
+  include_seen = true
+
+  mails = folder.messages include_seen
 
   position = 0
   start    = 2
@@ -126,6 +136,9 @@ begin
     case ch
     when 'q'.ord
       running = false
+    when 'n'.ord
+      include_seen = !include_seen
+      mails = folder.messages include_seen
     when Ncurses::KEY_HOME
       position = 0
       offset   = 0

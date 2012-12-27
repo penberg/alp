@@ -231,6 +231,10 @@ begin
       view.page_up!
     when Ncurses::KEY_NPAGE
       view.page_down!
+    when Ncurses::KEY_RESIZE
+      maxx = Ncurses.getmaxx(Ncurses.stdscr)
+      maxy = Ncurses.getmaxy(Ncurses.stdscr)
+      view = View.new width = maxx, height = maxy - start - 1, size = mails.length
     when 'e'.ord
       mail    = mails[view.index]
       lines   = mail.data.lines

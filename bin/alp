@@ -69,8 +69,11 @@ class View
   end
 
   def page_down!
-    @offset += @height
-    end! if @offset + @position >= @size
+    if @offset + @position + @height < @size
+      @offset += @height
+    else
+      end!
+    end
   end
 
   def home!
@@ -78,8 +81,12 @@ class View
   end
 
   def end!
-    @position = @height
-    @offset   = @size - @height - 1
+    if @size - @offset + @position < @height
+      @position = @size - @offset - 1
+    else
+      @position = @height
+      @offset   = @size - @height - 1 
+    end
   end
 end
 

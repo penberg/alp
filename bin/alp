@@ -10,7 +10,7 @@ class Folder
   def initialize name
     @name = name
   end
- 
+
   def messages include_seen
     home = ENV['HOME']
 
@@ -29,6 +29,52 @@ class Folder
     mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key) }
 
     mails
+  end
+end
+
+class View
+  attr_reader :position, :offset
+
+  def initialize width, height, size
+    @width  = width
+    @height = height
+    @size   = size
+    @position, @offset = 0, 0
+  end
+
+  def up!
+    if @position > 0
+      @position -= 1
+    elsif @offset > 0
+      @offset -= 1
+    end
+  end
+
+  def down!
+    if @position < @height
+      @position += 1
+    elsif @position + @offset < @size - 1
+      @offset += 1
+    end
+  end
+
+  def page_up!
+    @offset -= @height
+    home! if @offset < 0
+  end
+
+  def page_down!
+    @offset += @height
+    end! if @offset + @position >= @size
+  end
+
+  def home!
+    @position, @offset = 0, 0
+  end
+
+  def end!
+    @position = @height
+    @offset   = @size - @height - 1
   end
 end
 
@@ -85,12 +131,12 @@ begin
 
   mails = folder.messages include_seen
 
-  position = 0
   start    = 2
   width    = maxx
   height   = maxy - start - 1
-  offset   = 0
   running  = true
+
+  view = View.new width = maxx, height = maxy - start - 1, size = mails.length
 
   while (running)
     Ncurses.erase
@@ -101,18 +147,18 @@ begin
     Ncurses.stdscr.addstr " " * width
     Ncurses.stdscr.move(0, 0)
     Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder.name}"
-    message_text = "Message #{offset + position + 1} of #{mails.length}  "
+    message_text = "Message #{view.offset + view.position + 1} of #{mails.length}  "
     Ncurses.stdscr.move(0, width - message_text.length)
     Ncurses.stdscr.addstr message_text
     Ncurses.attroff(Ncurses::A_REVERSE)
 
     (0..height).each do |index|
-      mail    = mails[offset + index]
+      mail    = mails[view.offset + index]
       lines   = mail.data.lines
       date    = date(lines)
       from    = from(lines)[0, 25]
       subject = subject(lines)[0, width - 40]
-      if position == index
+      if view.position == index
         Ncurses.attron(Ncurses::A_REVERSE)
       else
         Ncurses.attroff(Ncurses::A_REVERSE)
@@ -140,43 +186,31 @@ begin
       include_seen = !include_seen
       mails = folder.messages include_seen
     when Ncurses::KEY_HOME
-      position = 0
-      offset   = 0
+      view.home!
     when Ncurses::KEY_END
-      position = height
-      offset   = mails.length - height - 1
+      view.end!
     when Ncurses::KEY_UP
-      if (position > 0)
-        position -= 1
-      else
-        offset -= 1
-      end
+      view.up!
     when Ncurses::KEY_DOWN
-      if (position < height)
-        position += 1
-      else
-        offset += 1
-      end
+      view.down!
     when Ncurses::KEY_PPAGE
-      offset -= height
+      view.page_up!
     when Ncurses::KEY_NPAGE
-      offset += height
+      view.page_down!
     when 'e'.ord
-      mail    = mails[offset + position]
+      mail    = mails[view.offset + view.position]
       lines   = mail.data.lines
       subject = subject(lines)
       target  = sanitize_filename(subject)
       system "cp #{mail.path} #{target}"
     when 13
-      mail = mails[offset + position]
+      mail = mails[view.offset + view.position]
       mail.process
       mail.add_flag("S")
       deinit
       system "less #{mail.path}"
       init
     end
-    offset = 0 if offset < 0
-    offset = mails.length - height if offset > mails.length - height - 1
   end
 ensure
   deinit

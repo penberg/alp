@@ -4,6 +4,10 @@ require 'ncursesw'
 require 'maildir'
 require 'date'
 
+def sanitize_filename(filename)
+  filename.gsub /[^a-z0-9\-]+/i, '_'
+end
+
 def date(mail)
   result = mail.select {|line| line[/^Date: /]}[0]
   Date.parse(result[6..-1].strip)
@@ -130,6 +134,12 @@ begin
       offset -= height
     when Ncurses::KEY_NPAGE
       offset += height
+    when 'e'.ord
+      mail    = mails[offset + position]
+      lines   = mail.data.lines
+      subject = subject(lines)
+      target  = sanitize_filename(subject)
+      system "cp #{mail.path} #{target}"
     when 13
       mail = mails[offset + position]
       mail.process

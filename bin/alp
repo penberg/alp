@@ -186,6 +186,7 @@ begin
 
     (0..height).each do |index|
       mail    = mails[view.offset + index]
+      next unless mail
       lines   = mail.data.lines
       date    = date(lines)
       from    = from(lines)[0, from_width]

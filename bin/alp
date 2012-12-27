@@ -2,7 +2,7 @@
 
 require 'ncursesw'
 require 'maildir'
-require 'date'
+require 'time'
 
 class Folder
   attr_reader :name
@@ -84,7 +84,7 @@ end
 
 def date(mail)
   result = mail.select {|line| line[/^Date: /]}[0]
-  Date.parse(result[6..-1].strip)
+  Time.parse(result[6..-1].strip)
 end
 
 def from(mail)
@@ -97,6 +97,22 @@ end
 def subject(mail)
   result = mail.select {|line| line[/^Subject: /]}[0]
   result[9..-1].strip
+end
+
+class Time
+  def to_human_s from = Time.now
+    if year != from.year
+      strftime("%b %Y")
+    elsif month != from.month
+      strftime("%b %e  ")
+    else
+      if day == from.day
+        strftime("%H:%M   ")
+      else
+        strftime("%b %e  ")
+      end
+    end
+  end
 end
 
 def init
@@ -176,7 +192,7 @@ begin
       Ncurses.stdscr.move(start + index, 0)
       Ncurses.stdscr.addstr " " * width
       Ncurses.stdscr.move(start + index, 0)
-      Ncurses.stdscr.addstr sprintf(" %s  %s  %-25s %s", flags, date.strftime("%b %e"), from, subject)
+      Ncurses.stdscr.addstr sprintf(" %s  %s  %-25s %s", flags, date.to_human_s, from, subject)
     end
     ch = Ncurses.stdscr.getch
     case ch

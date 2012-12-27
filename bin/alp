@@ -4,6 +4,26 @@ require 'ncursesw'
 require 'maildir'
 require 'date'
 
+class Folder
+  attr_reader :name
+
+  def initialize name
+    @name = name
+  end
+ 
+  def messages
+    home = ENV['HOME']
+
+    maildir = Maildir.new("#{home}/Mail/#{@name}", false)
+
+    mails = maildir.list(:new) + maildir.list(:cur)
+
+    mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key) }
+
+    mails
+  end
+end
+
 def sanitize_filename(filename)
   filename.gsub /[^a-z0-9\-]+/i, '_'
 end
@@ -51,15 +71,9 @@ begin
 
   maxy = Ncurses.getmaxy(Ncurses.stdscr)
 
-  home = ENV['HOME']
+  folder = Folder.new "INBOX"
 
-  folder = "INBOX"
-
-  maildir = Maildir.new("#{home}/Mail/#{folder}", false)
-
-  mails = maildir.list(:new) + maildir.list(:cur)
-
-  mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key)}
+  mails = folder.messages
 
   position = 0
   start    = 2
@@ -76,7 +90,7 @@ begin
     Ncurses.stdscr.move(0, 0)
     Ncurses.stdscr.addstr " " * width
     Ncurses.stdscr.move(0, 0)
-    Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder}"
+    Ncurses.stdscr.addstr "  ALP     MESSAGE INDEX Folder: #{folder.name}"
     message_text = "Message #{offset} of #{mails.length}  "
     Ncurses.stdscr.move(0, width - message_text.length)
     Ncurses.stdscr.addstr message_text

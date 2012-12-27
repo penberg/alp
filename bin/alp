@@ -106,14 +106,14 @@ end
 class Time
   def to_human_s from = Time.now
     if year != from.year
-      strftime("%b %Y")
+      strftime("%d/%m/%Y")
     elsif month != from.month
-      strftime("%b %e  ")
+      strftime("%e %b    ")
     else
       if day == from.day
-        strftime("%H:%M   ")
+        strftime("%H:%M     ")
       else
-        strftime("%b %e  ")
+        strftime("%e %b    ")
       end
     end
   end

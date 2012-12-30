@@ -20,11 +20,12 @@ class Folder
     mails = maildir.list(:new) + maildir.list(:cur)
 
     mails.select! {|a|
-      if a.flags.include? "S"
+      result = if a.flags.include? "S"
         include_seen
       else
-        true
+       true
       end
+      result && !a.flags.include?("T")
     }
 
     mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key) }

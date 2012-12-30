@@ -216,6 +216,9 @@ begin
       if mail.flags.include? "R"
         flags = "A"
       end
+      if mail.flags.include? "T"
+        flags = "D"
+      end
       Ncurses.stdscr.move(start + index, 0)
       Ncurses.stdscr.addstr " " * width
       Ncurses.stdscr.move(start + index, flags_offset)   ; Ncurses.stdscr.addstr flags
@@ -283,6 +286,9 @@ begin
     when 'u'.ord
       mail = mails[view.index]
       mail.remove_flag("S")
+    when 'd'.ord
+      mail = mails[view.index]
+      mail.add_flag("T")
     end
   end
 ensure

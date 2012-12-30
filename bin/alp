@@ -271,6 +271,14 @@ begin
       deinit
       system "vi mail"
       init
+    when 'c'.ord
+      message = Mail::Message.new
+      File.open("mail", 'w') do |file|
+        file.write(message.to_s)
+      end
+      deinit
+      system "vi mail"
+      init
     when 'u'.ord
       mail = mails[view.index]
       mail.remove_flag("S")

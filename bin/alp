@@ -285,9 +285,11 @@ begin
       init
     when 'u'.ord
       mail = mails[view.index]
+      mail.process
       mail.remove_flag("S")
     when 'd'.ord
       mail = mails[view.index]
+      mail.process
       mail.add_flag("T")
     end
   end

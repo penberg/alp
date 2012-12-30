@@ -259,6 +259,18 @@ begin
       deinit
       system "less #{mail.path}"
       init
+    when 'r'.ord
+      mail = mails[view.index]
+      message = Mail::Message.new(mail.data)
+      reply = message.reply do
+        body message.body.to_s.gsub(/^/, "> ")
+      end
+      File.open("mail", 'w') do |file|
+        file.write(reply.to_s)
+      end
+      deinit
+      system "vi mail"
+      init
     when 'u'.ord
       mail = mails[view.index]
       mail.remove_flag("S")

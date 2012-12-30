@@ -6,15 +6,13 @@ Alp is a text-mode frontend for offlineimap written in Ruby and curses.
 Installation
 ------------
 
-Dependencies:
-
 To install offlineimap:
 
 ~~~ sh
 $ yum install offlineimap
 ~~~
 
-Example configuration file looks like this:
+Example offlineimap configuration file looks like this:
 
 ~~~ sh
 $ cat $HOME/.offlineimaprc 
@@ -37,6 +35,26 @@ type = IMAP
 realdelete = no
 ~~~
 
+To install msmtp:
+
+~~~ sh
+$ yum install msmtp
+~~~
+
+Example msmtp configuration file looks like this:
+
+~~~ sh
+$ cat $HOME/.msmtprc 
+account default
+host smtp.gmail.com
+port 587
+tls on
+tls_trust_file /etc/pki/tls/cert.pem
+auth on
+user joe@gmail.com
+from joe@example.com
+~~~
+
 To install required gems:
 
 ~~~ sh
@@ -49,10 +67,16 @@ To fetch email from IMAP server:
 $ offlineimap
 ~~~
 
-And finally, to launch the email client:
+To launch the email client:
 
 ~~~ sh
 $ ./bin/alp
+~~~
+
+To send email:
+
+~~~ sh
+$ cat mail | msmtp -t
 ~~~
 
 Screenshots

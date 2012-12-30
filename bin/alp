@@ -101,6 +101,7 @@ end
 
 def from(mail)
   from = mail.select {|line| line[/^From: /]}[0]
+  return "" unless from
   from = from[6..-1].strip
   name = from.match("(.+) <(.+?)@(.+)>")
   result = name && name[1] || from
@@ -109,6 +110,7 @@ end
 
 def subject(mail)
   result = mail.select {|line| line[/^Subject: /]}[0]
+  return "" unless result
   Mail::Encodings::value_decode(result[9..-1].strip)
 end
 

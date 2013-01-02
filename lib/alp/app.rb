@@ -112,12 +112,12 @@ module Alp
     end
 
     def date(mail)
-      result = mail.select {|line| line[/^Date: /]}[0]
+      result = mail.select {|line| line[/^Date:/]}[0]
       Time.parse(result[6..-1].strip)
     end
 
     def from(mail)
-      from = mail.select {|line| line[/^From: /]}[0]
+      from = mail.select {|line| line[/^From:/]}[0]
       return "" unless from
       from = from[6..-1].strip
       name = from.match("(.+) <(.+?)@(.+)>")
@@ -126,7 +126,7 @@ module Alp
     end
 
     def subject(mail)
-      result = mail.select {|line| line[/^Subject: /]}[0]
+      result = mail.select {|line| line[/^Subject:/]}[0]
       return "" unless result
       Mail::Encodings::value_decode(result[9..-1].strip)
     end

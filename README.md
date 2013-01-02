@@ -6,6 +6,11 @@ Alp is a text-mode frontend for offlineimap written in Ruby and curses.
 Installation
 ------------
 
+You need Ruby and RubyGems to run Alp. You can either use your operating
+system specific Ruby package or install rbenv on your machine:
+
+https://github.com/sstephenson/rbenv#installation
+
 To install offlineimap:
 
 ~~~ sh

@@ -270,6 +270,7 @@ module Alp
             reply = message.reply do
               body message.body.to_s.gsub(/^/, "> ")
             end
+            reply.cc = message.cc
             File.open("mail", 'w') do |file|
               file.write(reply.to_s)
             end

@@ -301,8 +301,13 @@ module Alp
             init
           when 'n'.ord
             mail = mails[view.index].msg
-            mail.process
-            mail.remove_flag("S")
+            if mail.flags.include?("S")
+              mail.remove_flag("S")
+              mail.process
+            else
+              mail.process
+              mail.add_flag("S")
+            end
           when 'd'.ord
             mail = mails[view.index].msg
             mail.process

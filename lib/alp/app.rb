@@ -49,6 +49,42 @@ module Alp
     end
   end
 
+  class Message
+    attr_reader :msg, :date, :from, :subject
+
+    def initialize msg
+      @msg     = msg
+      lines    = msg.data.lines
+      @date    = parse_date(lines)
+      @from    = parse_from(lines)
+      @subject = parse_subject(lines)
+    end
+
+    def flags
+      @msg.flags
+    end
+
+    def parse_date(mail)
+      result = mail.select {|line| line[/^Date:/]}[0]
+      Time.parse(result[6..-1].strip)
+    end
+
+    def parse_from(mail)
+      from = mail.select {|line| line[/^From:/]}[0]
+      return "" unless from
+      from = from[6..-1].strip
+      name = from.match("(.+) <(.+?)@(.+)>")
+      result = name && name[1] || from
+      Mail::Encodings::value_decode(result).tr_s("\"", "").strip
+    end
+
+    def parse_subject(mail)
+      result = mail.select {|line| line[/^Subject:/]}[0]
+      return "" unless result
+      Mail::Encodings::value_decode(result[9..-1].strip)
+    end
+  end
+
   class View
     attr_reader :position, :offset, :size
 
@@ -111,26 +147,6 @@ module Alp
       filename.gsub /[^a-z0-9\-]+/i, '_'
     end
 
-    def date(mail)
-      result = mail.select {|line| line[/^Date:/]}[0]
-      Time.parse(result[6..-1].strip)
-    end
-
-    def from(mail)
-      from = mail.select {|line| line[/^From:/]}[0]
-      return "" unless from
-      from = from[6..-1].strip
-      name = from.match("(.+) <(.+?)@(.+)>")
-      result = name && name[1] || from
-      Mail::Encodings::value_decode(result).tr_s("\"", "").strip
-    end
-
-    def subject(mail)
-      result = mail.select {|line| line[/^Subject:/]}[0]
-      return "" unless result
-      Mail::Encodings::value_decode(result[9..-1].strip)
-    end
-
     def init
       Ncurses.cbreak
       Ncurses.noecho
@@ -159,10 +175,10 @@ module Alp
         maxy = Ncurses.getmaxy(Ncurses.stdscr)
        
         folder = Folder.new "INBOX"
-       
+
         include_seen = true
        
-        mails = folder.messages include_seen
+        mails = folder.messages(include_seen).map {|m| Message.new(m) }
        
         start    = 2
         width    = maxx
@@ -198,10 +214,9 @@ module Alp
           (0..height).each do |index|
             mail    = mails[view.offset + index]
             next unless mail
-            lines   = mail.data.lines
-            date    = date(lines)
-            from    = from(lines)[0, from_width]
-            subject = subject(lines)[0, subject_width]
+            date    = mail.date
+            from    = mail.from[0, from_width]
+            subject = mail.subject[0, subject_width]
             if view.position == index
               Ncurses.attron(Ncurses::A_REVERSE)
             else
@@ -233,7 +248,7 @@ module Alp
             running = false
           when 'n'.ord
             include_seen = !include_seen
-            mails = folder.messages include_seen
+            mails = folder.messages(include_seen).map {|m| Message.new(m) }
             view = View.new width = maxx, height = maxy - start - 1, size = mails.length
           when Ncurses::KEY_HOME
             view.home!
@@ -253,19 +268,18 @@ module Alp
             view = View.new width = maxx, height = maxy - start - 1, size = mails.length
           when 'e'.ord
             mail    = mails[view.index]
-            lines   = mail.data.lines
-            subject = subject(lines)
+            subject = mail.subject
             target  = sanitize_filename(subject)
-            system "cp #{mail.path} #{target}"
+            system "cp #{mail.msg.path} #{target}"
           when 13
-            mail = mails[view.index]
+            mail = mails[view.index].msg
             mail.process
             mail.add_flag("S")
             deinit
             system "less #{mail.path}"
             init
           when 'r'.ord
-            mail = mails[view.index]
+            mail = mails[view.index].msg
             message = Mail::Message.new(mail.data)
             reply = message.reply do
               body message.body.to_s.gsub(/^/, "> ")
@@ -286,11 +300,11 @@ module Alp
             system "vi mail"
             init
           when 'u'.ord
-            mail = mails[view.index]
+            mail = mails[view.index].msg
             mail.process
             mail.remove_flag("S")
           when 'd'.ord
-            mail = mails[view.index]
+            mail = mails[view.index].msg
             mail.process
             mail.add_flag("T")
           end

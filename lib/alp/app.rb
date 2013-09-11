@@ -54,7 +54,7 @@ module Alp
 
     def initialize width, height, size
       @width  = width
-      @height = height
+      @height = [height, size].min
       @size   = size
       @position, @offset = 0, 0
     end

@@ -246,7 +246,7 @@ module Alp
           case ch
           when 'q'.ord
             running = false
-          when 'n'.ord
+          when 'u'.ord
             include_seen = !include_seen
             mails = folder.messages(include_seen).map {|m| Message.new(m) }
             view = View.new width = maxx, height = maxy - start - 1, size = mails.length
@@ -299,7 +299,7 @@ module Alp
             deinit
             system "vi mail"
             init
-          when 'u'.ord
+          when 'n'.ord
             mail = mails[view.index].msg
             mail.process
             mail.remove_flag("S")

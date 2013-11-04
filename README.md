@@ -30,7 +30,7 @@ remoterepository = remote
 
 [Repository localhost]
 type = Maildir
-localfolders = ~/Mail
+localfolders = ~/Mail/Personal
 
 [Repository remote]
 remotehost = mail.example.com
@@ -75,7 +75,7 @@ $ offlineimap
 To launch the email client:
 
 ~~~ sh
-$ ./bin/alp
+$ ./bin/alp Personal
 ~~~
 
 To send email:

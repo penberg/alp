@@ -3,6 +3,18 @@
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '..', 'lib')
 require 'alp'
 
+def usage(s)
+  $stderr.puts(s)
+  $stderr.puts("usage: #{File.basename($0)} ACCOUNT")
+  exit(2)
+end
+
+usage("error: Account not specified.") unless ARGV.length > 0
+
+account = ARGV.shift
+
+path = "#{ENV['HOME']}/Mail/#{account}/INBOX"
+
 app = Alp::App.new
 
-app.run
+app.run(path)

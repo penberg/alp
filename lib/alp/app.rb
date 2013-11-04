@@ -21,16 +21,14 @@ end
 
 module Alp
   class Folder
-    attr_reader :name
+    attr_reader :path
 
-    def initialize name
-      @name = name
+    def initialize path
+      @path = path
     end
 
     def messages include_seen
-      home = ENV['HOME']
-
-      maildir = Maildir.new("#{home}/Mail/#{@name}", false)
+      maildir = Maildir.new(path, false)
 
       mails = maildir.list(:new) + maildir.list(:cur)
 
@@ -163,8 +161,8 @@ module Alp
       Ncurses.nl
       Ncurses.endwin
     end
- 
-    def run
+
+    def run(path)
       begin
         Ncurses.initscr
        
@@ -174,7 +172,7 @@ module Alp
        
         maxy = Ncurses.getmaxy(Ncurses.stdscr)
        
-        folder = Folder.new "INBOX"
+        folder = Folder.new(path)
 
         include_seen = true
        
@@ -199,13 +197,13 @@ module Alp
        
         while (running)
           Ncurses.erase
-       
+
           Ncurses.attroff(Ncurses::A_BOLD)
           Ncurses.attron(Ncurses::A_REVERSE)
           Ncurses.stdscr.move(0, 0)
           Ncurses.stdscr.addstr " " * width
           Ncurses.stdscr.move(0, 0)
-          Ncurses.stdscr.addstr "  #{folder.name}"
+          Ncurses.stdscr.addstr "  #{folder.path}"
           message_text = "Message #{view.index + 1} of #{view.size}  "
           Ncurses.stdscr.move(0, width - message_text.length)
           Ncurses.stdscr.addstr message_text

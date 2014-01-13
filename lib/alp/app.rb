@@ -1,4 +1,5 @@
-require 'ncursesw'
+require 'curses'
+
 require 'maildir'
 require 'mail'
 require 'time'
@@ -146,31 +147,29 @@ module Alp
     end
 
     def init
-      Ncurses.cbreak
-      Ncurses.noecho
-      Ncurses.nonl
-      Ncurses.stdscr.intrflush(false)
-      Ncurses.stdscr.keypad(true)
-      Ncurses.use_default_colors
-      Ncurses.start_color
+      Curses.init_screen
+      Curses.cbreak
+      Curses.noecho
+      Curses.nonl
+      Curses.stdscr.keypad(true)
+      Curses.use_default_colors
+      Curses.start_color
     end
  
     def deinit
-      Ncurses.echo
-      Ncurses.nocbreak
-      Ncurses.nl
-      Ncurses.endwin
+      Curses.echo
+      Curses.nocbreak
+      Curses.nl
+      Curses.close_screen
     end
 
     def run(path)
       begin
-        Ncurses.initscr
-       
         init
        
-        maxx = Ncurses.getmaxx(Ncurses.stdscr)
+        maxx = Curses.stdscr.maxx
        
-        maxy = Ncurses.getmaxy(Ncurses.stdscr)
+        maxy = Curses.stdscr.maxy
        
         folder = Folder.new(path)
 
@@ -195,19 +194,19 @@ module Alp
        
         view = View.new width = maxx, height = maxy - start - 1, size = mails.length
        
-        while (running)
-          Ncurses.erase
+        Curses.clear
 
-          Ncurses.attroff(Ncurses::A_BOLD)
-          Ncurses.attron(Ncurses::A_REVERSE)
-          Ncurses.stdscr.move(0, 0)
-          Ncurses.stdscr.addstr " " * width
-          Ncurses.stdscr.move(0, 0)
-          Ncurses.stdscr.addstr "  #{folder.path}"
+        while (running)
+          Curses.attroff(Curses::A_BOLD)
+          Curses.attron(Curses::A_REVERSE)
+          Curses.setpos(0, 0)
+          Curses.addstr " " * width
+          Curses.setpos(0, 0)
+          Curses.addstr "  #{folder.path}"
           message_text = "Message #{view.index + 1} of #{view.size}  "
-          Ncurses.stdscr.move(0, width - message_text.length)
-          Ncurses.stdscr.addstr message_text
-          Ncurses.attroff(Ncurses::A_REVERSE)
+          Curses.setpos(0, width - message_text.length)
+          Curses.addstr message_text
+          Curses.attroff(Curses::A_REVERSE)
        
           (0..height).each do |index|
             mail    = mails[view.offset + index]
@@ -216,15 +215,15 @@ module Alp
             from    = mail.from[0, from_width]
             subject = mail.subject[0, subject_width]
             if view.position == index
-              Ncurses.attron(Ncurses::A_REVERSE)
+              Curses.attron(Curses::A_REVERSE)
             else
-              Ncurses.attroff(Ncurses::A_REVERSE)
+              Curses.attroff(Curses::A_REVERSE)
             end
             if mail.flags.include? "S"
-              Ncurses.attroff(Ncurses::A_BOLD)
+              Curses.attroff(Curses::A_BOLD)
               flags = " "
             else
-              Ncurses.attron(Ncurses::A_BOLD)
+              Curses.attron(Curses::A_BOLD)
               flags = "N"
             end
             if mail.flags.include? "R"
@@ -233,36 +232,37 @@ module Alp
             if mail.flags.include? "T"
               flags = "D"
             end
-            Ncurses.stdscr.move(start + index, 0)
-            Ncurses.stdscr.addstr " " * width
-            Ncurses.stdscr.move(start + index, flags_offset)   ; Ncurses.stdscr.addstr flags
-            Ncurses.stdscr.move(start + index, from_offset)    ; Ncurses.stdscr.addstr from
-            Ncurses.stdscr.move(start + index, subject_offset) ; Ncurses.stdscr.addstr subject
-            Ncurses.stdscr.move(start + index, date_offset)    ; Ncurses.stdscr.addstr sprintf("%*s", date_width, date.to_human_s)
+            Curses.setpos(start + index, 0)
+            Curses.addstr " " * width
+            Curses.setpos(start + index, flags_offset)   ; Curses.addstr flags
+            Curses.setpos(start + index, from_offset)    ; Curses.addstr from
+            Curses.setpos(start + index, subject_offset) ; Curses.addstr subject
+            Curses.setpos(start + index, date_offset)    ; Curses.addstr sprintf("%*s", date_width, date.to_human_s)
           end
-          ch = Ncurses.stdscr.getch
+          Curses.refresh
+          ch = Curses.getch
           case ch
-          when 'q'.ord
+          when ?q
             running = false
-          when 'u'.ord
+          when ?u
             include_seen = !include_seen
             mails = folder.messages(include_seen).map {|m| Message.new(m) }
             view = View.new width = maxx, height = maxy - start - 1, size = mails.length
-          when Ncurses::KEY_HOME
+          when Curses::Key::HOME
             view.home!
-          when Ncurses::KEY_END
+          when Curses::Key::END
             view.end!
-          when Ncurses::KEY_UP
+          when Curses::Key::UP
             view.up!
-          when Ncurses::KEY_DOWN
+          when Curses::Key::DOWN
             view.down!
-          when Ncurses::KEY_PPAGE
+          when Curses::Key::PPAGE
             view.page_up!
-          when Ncurses::KEY_NPAGE
+          when Curses::Key::NPAGE
             view.page_down!
-          when Ncurses::KEY_RESIZE
-            maxx = Ncurses.getmaxx(Ncurses.stdscr)
-            maxy = Ncurses.getmaxy(Ncurses.stdscr)
+          when Curses::Key::RESIZE
+            maxx = Curses.stdscr.maxx
+            maxy = Curses.stdscr.maxy
             view = View.new width = maxx, height = maxy - start - 1, size = mails.length
           when 'e'.ord
             mail    = mails[view.index]
@@ -276,7 +276,7 @@ module Alp
             deinit
             system "less #{mail.path}"
             init
-          when 'r'.ord
+          when ?r
             mail = mails[view.index].msg
             message = Mail::Message.new(mail.data)
             reply = message.reply do
@@ -289,7 +289,7 @@ module Alp
             deinit
             system "vi mail"
             init
-          when 'c'.ord
+          when ?c
             message = Mail::Message.new
             File.open("mail", 'w') do |file|
               file.write(message.to_s)
@@ -297,7 +297,7 @@ module Alp
             deinit
             system "vi mail"
             init
-          when 'n'.ord
+          when ?n
             mail = mails[view.index].msg
             if mail.flags.include?("S")
               mail.remove_flag("S")
@@ -306,7 +306,7 @@ module Alp
               mail.process
               mail.add_flag("S")
             end
-          when 'd'.ord
+          when ?d
             mail = mails[view.index].msg
             mail.process
             mail.add_flag("T")

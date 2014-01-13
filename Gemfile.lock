@@ -5,8 +5,7 @@ GEM
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
     maildir (2.1.0)
-    mime-types (1.25)
-    ncursesw (1.2.4.3)
+    mime-types (1.25.1)
     polyglot (0.3.3)
     treetop (1.4.15)
       polyglot
@@ -18,4 +17,3 @@ PLATFORMS
 DEPENDENCIES
   mail
   maildir
-  ncursesw

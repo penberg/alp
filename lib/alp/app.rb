@@ -264,7 +264,7 @@ module Alp
             maxx = Curses.stdscr.maxx
             maxy = Curses.stdscr.maxy
             view = View.new width = maxx, height = maxy - start - 1, size = mails.length
-          when 'e'.ord
+          when ?e
             mail    = mails[view.index]
             subject = mail.subject
             target  = sanitize_filename(subject)

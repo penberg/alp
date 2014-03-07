@@ -49,27 +49,23 @@ module Alp
   end
 
   class Message
-    attr_reader :msg, :date, :from, :subject
+    attr_reader :msg
 
     def initialize msg
-      @msg     = msg
-      data     = msg.data
-      @date    = parse_date(data)
-      @from    = parse_from(data)
-      @subject = parse_subject(data)
+      @msg = msg
     end
 
     def flags
       @msg.flags
     end
 
-    def parse_date(mail)
-      result = mail.scan(/^(Date):\s([^\r\n]+)/mx)
+    def date
+      result = @msg.data.scan(/^(Date):\s([^\r\n]+)/mx)
       return Time.parse(result[0][1])
     end
 
-    def parse_from(mail)
-      result = mail.scan(/^(From):\s([^\r\n]+)/mx)
+    def from
+      result = @msg.data.scan(/^(From):\s([^\r\n]+)/mx)
       return "" unless result && result[0]
       from = result[0][1]
       name = from.match("(.+) <(.+?)@(.+)>")
@@ -78,8 +74,8 @@ module Alp
       return result
     end
 
-    def parse_subject(mail)
-      result = mail.scan(/^(Subject):\s([^\r\n]+)/mx)
+    def subject
+      result = @msg.data.scan(/^(Subject):\s([^\r\n]+)/mx)
       return "" unless result && result[0]
       return result[0][1]
     end

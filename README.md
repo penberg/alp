@@ -1,10 +1,11 @@
-Alp - Curses frontend for offlineimap
-=====================================
+# Alp, a text-mode email client
 
-Alp is a text-mode frontend for offlineimap written in Ruby and curses.
+Alp is a text-mode email client.  It is written in Ruby and it uses the
+standard Ruby Curses API for text rendering.  Alp works on mailboxes on
+the local filesystem for speed.  Use offlineimap, for example, to
+synchronize your local mailbox with an IMAP server.
 
-Installation
-------------
+## Installation
 
 You need Ruby and RubyGems to run Alp. You can either use your operating
 system specific Ruby package or install rbenv on your machine:
@@ -84,7 +85,12 @@ To send email:
 $ cat mail | msmtp -t
 ~~~
 
-Screenshots
------------
+# Screenshots
 
 ![alt text](https://github.com/penberg/alp/raw/master/www/alp-inbox-screenshot.png "Inbox")
+
+# License
+
+Copyright © 2012-2014 Pekka Enberg
+
+Alp is distributed under the MIT license.

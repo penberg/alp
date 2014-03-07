@@ -53,10 +53,10 @@ module Alp
 
     def initialize msg
       @msg     = msg
-      lines    = msg.data.lines
-      @date    = parse_date(lines)
-      @from    = parse_from(lines)
-      @subject = parse_subject(lines)
+      data     = msg.data
+      @date    = parse_date(data)
+      @from    = parse_from(data)
+      @subject = parse_subject(data)
     end
 
     def flags
@@ -64,23 +64,24 @@ module Alp
     end
 
     def parse_date(mail)
-      result = mail.select {|line| line[/^Date:/]}[0]
-      Time.parse(result[6..-1].strip)
+      result = mail.scan(/^(Date):\s([^\r\n]+)/mx)
+      return Time.parse(result[0][1])
     end
 
     def parse_from(mail)
-      from = mail.select {|line| line[/^From:/]}[0]
-      return "" unless from
-      from = from[6..-1].strip
+      result = mail.scan(/^(From):\s([^\r\n]+)/mx)
+      return "" unless result && result[0]
+      from = result[0][1]
       name = from.match("(.+) <(.+?)@(.+)>")
       result = name && name[1] || from
       Mail::Encodings::value_decode(result).tr_s("\"", "").strip
+      return result
     end
 
     def parse_subject(mail)
-      result = mail.select {|line| line[/^Subject:/]}[0]
-      return "" unless result
-      Mail::Encodings::value_decode(result[9..-1].strip)
+      result = mail.scan(/^(Subject):\s([^\r\n]+)/mx)
+      return "" unless result && result[0]
+      return result[0][1]
     end
   end
 

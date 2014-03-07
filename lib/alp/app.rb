@@ -1,8 +1,8 @@
-require 'curses'
-
+require 'alp/message'
+require 'alp/folder'
+require 'alp/view'
 require 'maildir'
-require 'mail'
-require 'time'
+require 'curses'
 
 class Time
   def to_human_s from = Time.now
@@ -21,123 +21,6 @@ class Time
 end
 
 module Alp
-  class Folder
-    attr_reader :path
-
-    def initialize path
-      @path = path
-    end
-
-    def messages include_seen
-      maildir = Maildir.new(path, false)
-
-      mails = maildir.list(:new) + maildir.list(:cur)
-
-      mails.select! {|a|
-        result = if a.flags.include? "S"
-          include_seen
-        else
-         true
-        end
-        result && !a.flags.include?("T")
-      }
-
-      mails.sort! {|a, b| b.unique_name <=> a.unique_name }
-
-      mails
-    end
-  end
-
-  class Message
-    attr_reader :msg
-
-    def initialize msg
-      @msg = msg
-    end
-
-    def flags
-      @msg.flags
-    end
-
-    def date
-      result = @msg.data.scan(/^(Date):\s([^\r\n]+)/mx)
-      return Time.parse(result[0][1])
-    end
-
-    def from
-      result = @msg.data.scan(/^(From):\s([^\r\n]+)/mx)
-      return "" unless result && result[0]
-      from = result[0][1]
-      name = from.match("(.+) <(.+?)@(.+)>")
-      result = name && name[1] || from
-      Mail::Encodings::value_decode(result).tr_s("\"", "").strip
-      return result
-    end
-
-    def subject
-      result = @msg.data.scan(/^(Subject):\s([^\r\n]+)/mx)
-      return "" unless result && result[0]
-      return result[0][1]
-    end
-  end
-
-  class View
-    attr_reader :position, :offset, :size
-
-    def initialize width, height, size
-      @width  = width
-      @height = [height, size].min
-      @size   = size
-      @position, @offset = 0, 0
-    end
-
-    def index
-      @offset + @position
-    end
-
-    def up!
-      if @position > 0
-        @position -= 1
-      elsif @offset > 0
-        @offset -= 1
-      end
-    end
-
-    def down!
-      if @position < @height
-        @position += 1
-      elsif @position + @offset < @size - 1
-        @offset += 1
-      end
-    end
-
-    def page_up!
-      @offset -= @height
-      home! if @offset < 0
-    end
-
-    def page_down!
-      if @offset + @position + @height < @size
-        @offset += @height
-      else
-        end!
-      end
-    end
-
-    def home!
-      @position, @offset = 0, 0
-    end
-
-    def end!
-      if @size - @offset + @position < @height
-        @position = @size - @offset - 1
-      else
-        @position = @height
-        @offset   = @size - @height - 1
-      end
-    end
-  end
-
   class App
     def sanitize_filename(filename)
       filename.gsub /[^a-z0-9\-]+/i, '_'

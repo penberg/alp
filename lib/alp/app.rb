@@ -42,7 +42,7 @@ module Alp
         result && !a.flags.include?("T")
       }
 
-      mails.sort! {|a, b| File.basename(b.key) <=> File.basename(a.key) }
+      mails.sort! {|a, b| b.unique_name <=> a.unique_name }
 
       mails
     end
